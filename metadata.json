@@ -1,0 +1,6 @@
+{
+  "name": "HDB Decide",
+  "description": "Singapore HDB property analytics, affordability scoring, price trends, and transit intelligence platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
