@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import ltaRouter from './lta';
+import hdbRouter from './hdb';
 
 const apiRouter = Router();
 
@@ -15,11 +16,16 @@ apiRouter.get('/health', (_req, res) => {
         trafficIncidents: true,
         trainServiceAlerts: true,
       },
+      dataGovSg: {
+        hdbResalePrices: true,
+        datasetMetadata: true,
+      },
     },
   });
 });
 
-// Mount LTA DataMall routes
+// Mount routes
 apiRouter.use('/', ltaRouter);
+apiRouter.use('/', hdbRouter);
 
 export default apiRouter;
