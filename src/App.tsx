@@ -9,6 +9,7 @@ import { TownSearchScreen } from './components/TownSearchScreen';
 import { FlatDetailsScreen } from './components/FlatDetailsScreen';
 import { AllFlatTypesOverview } from './components/AllFlatTypesOverview';
 import { PhotoGalleryModal } from './components/PhotoGalleryModal';
+import { DisqusComments } from './components/DisqusComments';
 import { MortgageModal } from './components/MortgageModal';
 import { AmenitiesModal } from './components/AmenitiesModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -130,6 +131,12 @@ export default function App() {
             onOpenPhotoGallery={handleOpenPhotoGallery}
           />
         )}
+
+        {/* Disqus Community Discussion Thread */}
+        <DisqusComments
+          identifier={`hdb-${selectedFlat.id}`}
+          title={`${selectedFlat.street}, ${selectedFlat.block} (${selectedFlat.town}) - HDB Decision Analysis`}
+        />
       </main>
 
       {/* Fullscreen Photo Gallery Lightbox */}
