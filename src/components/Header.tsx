@@ -227,11 +227,12 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setSelectedFlatType(e.target.value)}
               className="border border-[#e0e3e5] rounded-md py-1.5 px-3 text-sm bg-[#f7f9fb] outline-none focus:border-[#0e6969] focus:ring-1 focus:ring-[#0e6969] text-[#191c1e] font-medium"
             >
-              <option>4-Room</option>
-              <option>3-Room</option>
-              <option>5-Room</option>
-              <option>Executive</option>
-              <option>2-Room</option>
+              <option value="All Types">All Flat Types</option>
+              <option value="4-Room">4-Room</option>
+              <option value="3-Room">3-Room</option>
+              <option value="5-Room">5-Room</option>
+              <option value="Executive">Executive</option>
+              <option value="2-Room">2-Room</option>
             </select>
           </div>
 
@@ -248,19 +249,26 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setSelectedBudget(e.target.value)}
               className="border border-[#e0e3e5] rounded-md py-1.5 px-3 text-sm bg-[#f7f9fb] outline-none focus:border-[#0e6969] focus:ring-1 focus:ring-[#0e6969] text-[#191c1e] font-medium"
             >
-              <option>$600k</option>
-              <option>$500k</option>
-              <option>$700k</option>
-              <option>$800k+</option>
-              <option>$400k</option>
+              <option value="All Budgets">All Budgets</option>
+              <option value="$400k">Under $400k</option>
+              <option value="$500k">Under $500k</option>
+              <option value="$600k">Under $600k</option>
+              <option value="$750k">Under $750k</option>
+              <option value="$900k">Under $900k</option>
+              <option value="$1.2M">Under $1.2M</option>
+              <option value="$1.5M">Under $1.5M</option>
+              <option value="$2.0M">Under $2.0M (Max HDB Limit)</option>
             </select>
           </div>
 
           <button
             id="filter-update-btn"
             onClick={() => {
-              // trigger a refresh or toast
-              const match = allFlats.find((f) => f.flatType === selectedFlatType) || allFlats[0];
+              let matches = allFlats;
+              if (selectedFlatType !== 'All Types') {
+                matches = matches.filter((f) => f.flatType === selectedFlatType);
+              }
+              const match = matches[0] || allFlats[0];
               onSelectFlat(match);
             }}
             className="bg-[#041627] text-white px-4 py-1.5 rounded-md text-[12px] uppercase tracking-wider font-semibold whitespace-nowrap hover:bg-[#1a2b3c] active:scale-95 transition-all ml-auto md:ml-0 shadow-sm"

@@ -1,3 +1,28 @@
+export type FlatTypeOption = 'All Types' | '2-Room' | '3-Room' | '4-Room' | '5-Room' | 'Executive';
+
+export interface PropertyImage {
+  url: string;
+  title: string;
+  category: 'Living' | 'Bedroom' | 'Kitchen' | 'View' | 'Facade' | 'FloorPlan' | 'Estate';
+  description?: string;
+}
+
+export interface RoomDimension {
+  name: string;
+  areaSqm: number;
+  dimensions: string;
+  type: 'living' | 'master' | 'bedroom' | 'kitchen' | 'bath' | 'balcony' | 'shelter';
+  features: string[];
+}
+
+export interface FloorPlanSpec {
+  layoutType: string;
+  facing: string;
+  windOrientation: string;
+  ceilingHeightM: number;
+  rooms: RoomDimension[];
+}
+
 export interface FlatItem {
   id: string;
   town: string;
@@ -25,6 +50,8 @@ export interface FlatItem {
   proximityToMallText: string;
   trafficNodeStatus: string;
   mapImageUrl?: string;
+  images: PropertyImage[];
+  floorPlanSpec?: FloorPlanSpec;
   nearestStop: {
     name: string;
     code: string;

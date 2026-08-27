@@ -7,6 +7,8 @@ import { BentoGrid } from './components/BentoGrid';
 import { DeepDiveSection } from './components/DeepDiveSection';
 import { TownSearchScreen } from './components/TownSearchScreen';
 import { FlatDetailsScreen } from './components/FlatDetailsScreen';
+import { AllFlatTypesOverview } from './components/AllFlatTypesOverview';
+import { PhotoGalleryModal } from './components/PhotoGalleryModal';
 import { MortgageModal } from './components/MortgageModal';
 import { AmenitiesModal } from './components/AmenitiesModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -17,16 +19,20 @@ export default function App() {
   // Navigation tab state: 'home' | 'towns' | 'details'
   const [currentTab, setCurrentTab] = useState<'home' | 'towns' | 'details'>('home');
 
-  // Currently selected flat for the dashboard (defaults to Tampines Blk 211 as in screenshot)
+  // Currently selected flat for the dashboard (defaults to Tampines Blk 211)
   const [selectedFlat, setSelectedFlat] = useState<FlatItem>(ALL_FLATS[0]);
-  const [selectedFlatType, setSelectedFlatType] = useState<string>('4-Room');
-  const [selectedBudget, setSelectedBudget] = useState<string>('$600k');
+  const [selectedFlatType, setSelectedFlatType] = useState<string>('All Types');
+  const [selectedBudget, setSelectedBudget] = useState<string>('All Budgets');
 
   // Preferences & Modals
   const [isMortgageOpen, setIsMortgageOpen] = useState(false);
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
+  const [activeGalleryFlat, setActiveGalleryFlat] = useState<FlatItem>(ALL_FLATS[0]);
+  const [initialGalleryIndex, setInitialGalleryIndex] = useState<number>(0);
+
   const [savedFlatIds, setSavedFlatIds] = useState<string[]>(['tampines-blk-211']);
   const [units, setUnits] = useState<'sqm' | 'sqft'>('sqm');
   const [currency, setCurrency] = useState<string>('SGD');
@@ -42,6 +48,12 @@ export default function App() {
   const handleSelectFlat = (flat: FlatItem) => {
     setSelectedFlat(flat);
     setSelectedFlatType(flat.flatType);
+  };
+
+  const handleOpenPhotoGallery = (flat: FlatItem, initialIdx: number = 0) => {
+    setActiveGalleryFlat(flat);
+    setInitialGalleryIndex(initialIdx);
+    setIsPhotoGalleryOpen(true);
   };
 
   return (
@@ -70,11 +82,21 @@ export default function App() {
       >
         {currentTab === 'home' && (
           <div className="animate-in fade-in duration-200">
-            {/* Hero: Decision Score & Property Header */}
+            {/* Hero: Decision Score, Property Header & Visual Photo Bar */}
             <HeroDecisionCard
               flat={selectedFlat}
               isSaved={savedFlatIds.includes(selectedFlat.id)}
               onToggleSave={handleToggleSave}
+              onOpenDetails={() => setCurrentTab('details')}
+              onOpenPhotoGallery={handleOpenPhotoGallery}
+            />
+
+            {/* Explore All Flat Types in Singapore (Requested Feature) */}
+            <AllFlatTypesOverview
+              allFlats={ALL_FLATS}
+              selectedFlatId={selectedFlat.id}
+              onSelectFlat={handleSelectFlat}
+              onOpenPhotoGallery={handleOpenPhotoGallery}
               onOpenDetails={() => setCurrentTab('details')}
             />
 
@@ -105,9 +127,19 @@ export default function App() {
             flat={selectedFlat}
             onOpenMortgage={() => setIsMortgageOpen(true)}
             onBackToHome={() => setCurrentTab('home')}
+            onOpenPhotoGallery={handleOpenPhotoGallery}
           />
         )}
       </main>
+
+      {/* Fullscreen Photo Gallery Lightbox */}
+      <PhotoGalleryModal
+        isOpen={isPhotoGalleryOpen}
+        onClose={() => setIsPhotoGalleryOpen(false)}
+        images={activeGalleryFlat.images || []}
+        flatTitle={`${activeGalleryFlat.street}, ${activeGalleryFlat.block} (${activeGalleryFlat.town})`}
+        initialIndex={initialGalleryIndex}
+      />
 
       {/* Modals & Dialogs */}
       <MortgageModal

@@ -102,13 +102,18 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({ isOpen, onClose, f
             </div>
             <input
               type="range"
-              min="300000"
-              max="1200000"
+              min="200000"
+              max="2000000"
               step="10000"
               value={purchasePrice}
               onChange={(e) => setPurchasePrice(Number(e.target.value))}
               className="w-full accent-[#0e6969]"
             />
+            <div className="flex justify-between text-[10px] text-[#74777d] mt-0.5">
+              <span>$200k (2-Room)</span>
+              <span>$1.0M (Million Dollar Club)</span>
+              <span className="font-semibold text-[#0e6969]">$2.0M (HDB Max)</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -164,13 +169,19 @@ export const MortgageModal: React.FC<MortgageModalProps> = ({ isOpen, onClose, f
             </div>
             <input
               type="range"
-              min="3000"
-              max="20000"
+              min="2500"
+              max="35000"
               step="500"
               value={monthlyIncome}
               onChange={(e) => setMonthlyIncome(Number(e.target.value))}
               className="w-full accent-[#0e6969]"
             />
+            <div className="flex justify-between text-[10px] text-[#74777d] mt-0.5">
+              <span>$2,500</span>
+              <span>$14k (HDB BTO Ceiling)</span>
+              <span>$21k (EC Ceiling)</span>
+              <span>$35k (Executive Max)</span>
+            </div>
           </div>
 
           {/* Results Summary Box */}
