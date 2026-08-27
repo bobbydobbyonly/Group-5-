@@ -8,13 +8,13 @@ import {
   ShoppingBag,
   Volume2,
   ChevronRight,
-  Calculator,
   Train,
   ArrowUpRight,
-  ExternalLink,
-  Radio
+  RefreshCw,
+  Zap,
 } from 'lucide-react';
 import { FlatItem } from '../types';
+import { fetchLiveBusArrival, calculateMinutesUntil } from '../services/ltaService';
 
 interface BentoGridProps {
   flat: FlatItem;
@@ -29,21 +29,54 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   onOpenAmenities,
   onOpenTransit,
 }) => {
-  // Live bus timer simulation
   const [buses, setBuses] = useState(flat.nearestStop.buses);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedTime, setLastRefreshedTime] = useState<string>('Just now');
   const [pulse, setPulse] = useState(false);
 
-  useEffect(() => {
-    setBuses(flat.nearestStop.buses);
-  }, [flat]);
+  const loadBusArrivals = async () => {
+    setIsRefreshing(true);
+    setPulse(true);
+    setTimeout(() => setPulse(false), 800);
+
+    const busStopCode = flat.nearestStop.code || '83139';
+    const result = await fetchLiveBusArrival(busStopCode);
+
+    if (result.isLive && result.data?.Services && result.data.Services.length > 0) {
+      setIsLiveConnected(true);
+      const parsedBuses = result.data.Services.map((svc) => {
+        const arrivalMins = calculateMinutesUntil(svc.NextBus?.EstimatedArrival) ?? 5;
+        const load = svc.NextBus?.Load;
+        let crowdedness = 'Seats Available';
+        if (load === 'SDA') crowdedness = 'Standing Available';
+        if (load === 'LSD') crowdedness = 'Limited Standing';
+
+        return {
+          number: svc.ServiceNo,
+          destination: `Operator: ${svc.Operator || 'SBST'}`,
+          arrivalMins: arrivalMins,
+          crowdedness,
+        };
+      });
+      setBuses(parsedBuses.slice(0, 4));
+    } else {
+      setIsLiveConnected(false);
+      setBuses(flat.nearestStop.buses);
+    }
+    setLastRefreshedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
+    loadBusArrivals();
+    // 20-second refresh cycle for LTA v3 BusArrival
     const interval = setInterval(() => {
-      setPulse(true);
-      setTimeout(() => setPulse(false), 800);
-    }, 12000);
+      loadBusArrivals();
+    }, 20000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [flat]);
 
   return (
     <section id="bento-pillars-grid" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -139,7 +172,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
           </ul>
 
           <div className="mt-3 flex items-center justify-between text-xs text-[#0e6969] font-semibold">
-            <span>Explore 8 Neighborhood Amenities</span>
+            <span>Explore 8 Neighborhood Amenities & Carpark</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </div>
         </div>
@@ -151,10 +184,28 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         className="bg-white p-6 rounded-lg border border-[#e0e3e5] shadow-[0_4px_6px_-1px_rgba(4,22,39,0.05),0_2px_4px_-1px_rgba(4,22,39,0.03)] flex flex-col h-full hover:border-[#0e6969]/40 transition-all"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[12px] uppercase tracking-wider font-semibold text-[#44474c]">
-            Connectivity
-          </h2>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[12px] uppercase tracking-wider font-semibold text-[#44474c]">
+              Connectivity
+            </h2>
+            {isLiveConnected ? (
+              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
+                <Zap className="w-2.5 h-2.5" /> LTA Live (20s)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                LTA DataMall Ready
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadBusArrivals}
+              title="Refresh LTA live arrivals (20s cycle)"
+              className="text-[#74777d] hover:text-[#0e6969] p-1 rounded hover:bg-[#f2f4f6] transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#0e6969]' : ''}`} />
+            </button>
             <span className="relative flex h-2 w-2">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0e6969] opacity-75 ${pulse ? 'duration-500' : ''}`}></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0e6969]"></span>
@@ -164,7 +215,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         </div>
 
         <div className="mb-3">
-          <p className="text-xs text-[#44474c] mb-0.5">Nearest Stop</p>
+          <div className="flex items-center justify-between text-xs text-[#44474c] mb-0.5">
+            <span>Nearest Stop</span>
+            <span className="text-[10px] text-[#74777d]">{lastRefreshedTime}</span>
+          </div>
           <p className="text-base font-semibold text-[#041627] flex items-center justify-between">
             <span>{flat.nearestStop.name} ({flat.nearestStop.code})</span>
             <span className="text-[#74777d] text-xs font-normal font-['JetBrains_Mono']">
@@ -183,24 +237,27 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                 <span className="bg-[#041627] text-white px-2 py-0.5 rounded font-['JetBrains_Mono'] text-xs font-semibold">
                   {bus.number}
                 </span>
-                <span className="text-xs font-medium text-[#191c1e]">{bus.destination}</span>
+                <span className="text-xs font-medium text-[#191c1e] truncate max-w-[140px]">{bus.destination}</span>
               </div>
               <span
                 className={`font-['JetBrains_Mono'] text-xs font-semibold ${
-                  bus.arrivalMins <= 5 ? 'text-[#0e6969]' : 'text-[#44474c]'
+                  bus.arrivalMins <= 3 ? 'text-[#0e6969]' : bus.arrivalMins <= 6 ? 'text-emerald-600' : 'text-[#44474c]'
                 }`}
               >
-                {bus.arrivalMins} mins
+                {bus.arrivalMins <= 0 ? 'Arr' : `${bus.arrivalMins} mins`}
               </span>
             </div>
           ))}
         </div>
 
         <div className="mt-3 pt-2.5 border-t border-[#e0e3e5] flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-[#041627] font-medium">
+          <button
+            onClick={onOpenTransit}
+            className="flex items-center gap-1.5 text-[#041627] font-medium hover:text-[#0e6969] transition-colors"
+          >
             <Train className="w-3.5 h-3.5 text-[#0e6969]" />
             <span>{flat.mrtStation.name}</span>
-          </div>
+          </button>
           <span className="text-[#74777d] font-['JetBrains_Mono']">
             {flat.mrtStation.distance} ({flat.mrtStation.walkMins} mins)
           </span>
